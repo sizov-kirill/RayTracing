@@ -51,6 +51,12 @@ struct SMaterial
 	int MaterialType;
 };
 
+struct SCube
+{
+	vec3 bounds[2];
+	int MaterialIdx;
+};
+
 struct SIntersection 
 {     
     float Time;    
@@ -77,6 +83,7 @@ struct STracingRay
 
 STriangle Triangles[12]; 
 SSphere Spheres[2];
+SCube cube;
 SMaterial Materials[7];
 SLight uLight;
 SCamera uCamera;
@@ -150,13 +157,17 @@ void initializeDefaultScene (out STriangle triangles[12], out SSphere spheres[2]
 	triangles[11].v3 = vec3(-5.0, -5.0, -8.0); 
 	triangles[11].MaterialIdx = 5;
 	
-	spheres[0].Center = vec3(-1.0,-1.0,-2.0);  
-	spheres[0].Radius = 0.5;  
+	spheres[0].Center = vec3(2.0,1.0,2.0);  
+	spheres[0].Radius = 0.3;  
 	spheres[0].MaterialIdx = 6; 
  
-    spheres[1].Center = vec3(2.0,1.0,2.0);  
-	spheres[1].Radius = 1.0;  
+    spheres[1].Center = vec3(-2.0,-1.0,1.0);  
+	spheres[1].Radius = 1.3;  
 	spheres[1].MaterialIdx = 6;
+
+	cube.bounds[0] = vec3(-1.0,-1.0,-1.0);
+	cube.bounds[1] = vec3(1.0, 1.0, -1.0);
+	cube.MaterialIdx = 1;
 }
 
 void initializeDefaultLightMaterials(out SLight light, out SMaterial materials[7]) 
@@ -280,6 +291,50 @@ bool IntersectTriangle (SRay ray, vec3 v1, vec3 v2, vec3 v3, out float time )
 	return true; 
 }
 
+bool IntersectCube(SCube cube, SRay ray, out float time) 
+{
+	float tmin, tmax, tymin, tymax, tzmin, tzmax; 
+
+	int sign[3];
+	vec3 invdir = 1 / ray.Direction;
+	sign[0] = (invdir.x < 0) ? 1 : 0;
+	sign[1] = (invdir.y < 0) ? 1 : 0;
+	sign[2] = (invdir.z < 0) ? 1 : 0;
+
+    tmin = (cube.bounds[sign[0]].x - ray.Origin.x) * invdir.x; 
+    tmax = (cube.bounds[1-sign[0]].x - ray.Origin.x) * invdir.x; 
+    tymin = (cube.bounds[sign[1]].y - ray.Origin.y) * invdir.y; 
+    tymax = (cube.bounds[1-sign[1]].y - ray.Origin.y) * invdir.y; 
+ 
+    if ((tmin > tymax) || (tymin > tmax)) 
+        return false; 
+ 
+    if (tymin > tmin) 
+        tmin = tymin; 
+    if (tymax < tmax) 
+        tmax = tymax; 
+ 
+    tzmin = (cube.bounds[sign[2]].z - ray.Origin.z) * invdir.z; 
+    tzmax = (cube.bounds[1-sign[2]].z - ray.Origin.z) * invdir.z; 
+ 
+    if ((tmin > tzmax) || (tzmin > tmax)) 
+        return false; 
+ 
+    if (tzmin > tmin) 
+        tmin = tzmin; 
+    if (tzmax < tmax) 
+        tmax = tzmax; 
+ 
+    time = tmin; 
+ 
+    if (time < 0) { 
+        time = tmax; 
+        if (time < 0) return false; 
+    } 
+ 
+    return true; 
+}
+
 bool Raytrace ( SRay ray, float start, float final, inout SIntersection intersect ) 
 { 
     bool result = false; 
@@ -322,6 +377,19 @@ bool Raytrace ( SRay ray, float start, float final, inout SIntersection intersec
 			result = true;    
 	    } 
 	}
+
+	if( IntersectCube (cube, ray, test) && test < intersect.Time )  {       
+    		intersect.Time = test;    
+			intersect.Point = ray.Origin + ray.Direction * test;      
+			intersect.Normal = normalize (cube.bounds[0]);
+			SMaterial mat = Materials[6];
+			intersect.Color = mat.Color;        
+			intersect.LightCoeffs = mat.LightCoeffs;
+			intersect.ReflectionCoef = mat.ReflectionCoef;   
+			intersect.RefractionCoef = mat.RefractionCoef;       
+			intersect.MaterialType =   mat.MaterialType;  
+			result = true;    
+	} 
 	return result;
 } 
 
