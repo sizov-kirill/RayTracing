@@ -151,7 +151,7 @@ void initializeDefaultScene (out STriangle triangles[12], out SSphere spheres[2]
 	triangles[11].MaterialIdx = 5;
 	
 	spheres[0].Center = vec3(-1.0,-1.0,-2.0);  
-	spheres[0].Radius = 2.0;  
+	spheres[0].Radius = 0.5;  
 	spheres[0].MaterialIdx = 6; 
  
     spheres[1].Center = vec3(2.0,1.0,2.0);  
