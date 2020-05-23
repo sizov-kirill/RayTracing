@@ -12,6 +12,8 @@ const int MAX_TRACE_DEPTH = 8;
 const vec3 Unit = vec3 ( 1.0, 1.0, 1.0 );
 out vec4 FragColor;
 in vec3 glPosition;
+uniform vec3 cube_color;
+uniform vec3 camera_position;
  
 struct SCamera 
 {
@@ -51,9 +53,9 @@ struct SMaterial
 	int MaterialType;
 };
 
-struct SCube
+struct SCube 
 {
-	vec3 bounds[2];
+	STriangle bounds[12];
 	int MaterialIdx;
 };
 
@@ -84,7 +86,7 @@ struct STracingRay
 STriangle Triangles[12]; 
 SSphere Spheres[2];
 SCube cube;
-SMaterial Materials[7];
+SMaterial Materials[8];
 SLight uLight;
 SCamera uCamera;
 
@@ -157,7 +159,7 @@ void initializeDefaultScene (out STriangle triangles[12], out SSphere spheres[2]
 	triangles[11].v3 = vec3(-5.0, -5.0, -8.0); 
 	triangles[11].MaterialIdx = 5;
 	
-	spheres[0].Center = vec3(2.0,1.0,2.0);  
+	spheres[0].Center = vec3(2.0,0.0,2.0);  
 	spheres[0].Radius = 0.3;  
 	spheres[0].MaterialIdx = 6; 
  
@@ -165,12 +167,69 @@ void initializeDefaultScene (out STriangle triangles[12], out SSphere spheres[2]
 	spheres[1].Radius = 1.3;  
 	spheres[1].MaterialIdx = 6;
 
-	cube.bounds[0] = vec3(-1.0,-1.0,-1.0);
-	cube.bounds[1] = vec3(1.0, 1.0, -1.0);
-	cube.MaterialIdx = 1;
+	cube.bounds[0].v1 = vec3(1.0,1.0,2.0);
+	cube.bounds[0].v2 = vec3(1.0,1.5,2.0);
+	cube.bounds[0].v3 = vec3(1.0,1.0,1.5);
+	cube.bounds[0].MaterialIdx = 7;
+	
+	cube.bounds[1].v1 = vec3(1.0,1.5,1.5);
+	cube.bounds[1].v2 = vec3(1.0,1.5,2.0);
+	cube.bounds[1].v3 = vec3(1.0,1.0,1.5);
+	cube.bounds[1].MaterialIdx = 7;
+
+	cube.bounds[2].v1 = vec3(1.0,1.0,2.0);
+	cube.bounds[2].v2 = vec3(1.0,1.5,2.0);
+	cube.bounds[2].v3 = vec3(1.5,1.0,2.0);
+	cube.bounds[2].MaterialIdx = 7;
+	
+	cube.bounds[3].v1 = vec3(1.5,1.5,2.0);
+	cube.bounds[3].v2 = vec3(1.0,1.5,2.0);
+	cube.bounds[3].v3 = vec3(1.5,1.0,2.0);
+	cube.bounds[3].MaterialIdx = 7;
+	
+	cube.bounds[4].v1 = vec3(1.5,1.5,1.5);
+	cube.bounds[4].v2 = vec3(1.0,1.5,1.5);
+	cube.bounds[4].v3 = vec3(1.0,1.5,2.0);
+	cube.bounds[4].MaterialIdx = 7;
+	
+	cube.bounds[5].v1 = vec3(1.5,1.5,1.5);
+	cube.bounds[5].v2 = vec3(1.5,1.5,2.0);
+	cube.bounds[5].v3 = vec3(1.0,1.5,2.0);
+	cube.bounds[5].MaterialIdx = 7;
+	
+	cube.bounds[6].v1 = vec3(1.5,1.5,1.5);
+	cube.bounds[6].v2 = vec3(1.5,1.5,2.0);
+	cube.bounds[6].v3 = vec3(1.5,1.0,1.5);
+	cube.bounds[6].MaterialIdx = 7;
+	
+	cube.bounds[7].v1 = vec3(1.5,1.0,2.0);
+	cube.bounds[7].v2 = vec3(1.5,1.5,2.0);
+	cube.bounds[7].v3 = vec3(1.5,1.0,1.5);
+	cube.bounds[7].MaterialIdx = 7;
+	
+	cube.bounds[8].v1 = vec3(1.0,1.0,2.0);
+	cube.bounds[8].v2 = vec3(1.0,1.0,1.5);
+	cube.bounds[8].v3 = vec3(1.5,1.0,1.5);
+	cube.bounds[8].MaterialIdx = 7;
+
+	cube.bounds[9].v1 = vec3(1.0,1.0,2.0);
+	cube.bounds[9].v2 = vec3(1.5,1.0,2.0);
+	cube.bounds[9].v3 = vec3(1.5,1.0,1.5);
+	cube.bounds[9].MaterialIdx = 7;
+	
+	cube.bounds[10].v1 = vec3(1.0,1.5,1.5);
+	cube.bounds[10].v2 = vec3(1.5,1.5,1.5);
+	cube.bounds[10].v3 = vec3(1.0,1.0,1.5);
+	cube.bounds[10].MaterialIdx = 7;
+	
+	cube.bounds[11].v1 = vec3(1.5,1.0,1.5);
+	cube.bounds[11].v2 = vec3(1.5,1.5,1.5);
+	cube.bounds[11].v3 = vec3(1.0,1.0,1.5);
+	cube.bounds[11].MaterialIdx = 7;
+	cube.MaterialIdx = 7;
 }
 
-void initializeDefaultLightMaterials(out SLight light, out SMaterial materials[7]) 
+void initializeDefaultLightMaterials(out SLight light, out SMaterial materials[8]) 
 {
     light.Position = vec3(0.0, 2.0, -4.0f); 
  
@@ -216,6 +275,12 @@ void initializeDefaultLightMaterials(out SLight light, out SMaterial materials[7
     materials[6].ReflectionCoef = 0.5;  
 	materials[6].RefractionCoef = 1.0;  
 	materials[6].MaterialType = MIRROR_REFLECTION;
+
+	materials[7].Color = cube_color;
+	materials[7].LightCoeffs = vec4(lightCoefs); 
+    materials[7].ReflectionCoef = 0.5;  
+	materials[7].RefractionCoef = 1.0;  
+	materials[7].MaterialType = DIFFUSE_REFLECTION;
 }
 
 bool solveQuadratic(const float a, const float b, const float c, out float x0, out float x1)
@@ -291,49 +356,6 @@ bool IntersectTriangle (SRay ray, vec3 v1, vec3 v2, vec3 v3, out float time )
 	return true; 
 }
 
-bool IntersectCube(SCube cube, SRay ray, out float time) 
-{
-	float tmin, tmax, tymin, tymax, tzmin, tzmax; 
-
-	int sign[3];
-	vec3 invdir = 1 / ray.Direction;
-	sign[0] = (invdir.x < 0) ? 1 : 0;
-	sign[1] = (invdir.y < 0) ? 1 : 0;
-	sign[2] = (invdir.z < 0) ? 1 : 0;
-
-    tmin = (cube.bounds[sign[0]].x - ray.Origin.x) * invdir.x; 
-    tmax = (cube.bounds[1-sign[0]].x - ray.Origin.x) * invdir.x; 
-    tymin = (cube.bounds[sign[1]].y - ray.Origin.y) * invdir.y; 
-    tymax = (cube.bounds[1-sign[1]].y - ray.Origin.y) * invdir.y; 
- 
-    if ((tmin > tymax) || (tymin > tmax)) 
-        return false; 
- 
-    if (tymin > tmin) 
-        tmin = tymin; 
-    if (tymax < tmax) 
-        tmax = tymax; 
- 
-    tzmin = (cube.bounds[sign[2]].z - ray.Origin.z) * invdir.z; 
-    tzmax = (cube.bounds[1-sign[2]].z - ray.Origin.z) * invdir.z; 
- 
-    if ((tmin > tzmax) || (tzmin > tmax)) 
-        return false; 
- 
-    if (tzmin > tmin) 
-        tmin = tzmin; 
-    if (tzmax < tmax) 
-        tmax = tzmax; 
- 
-    time = tmin; 
- 
-    if (time < 0) { 
-        time = tmax; 
-        if (time < 0) return false; 
-    } 
- 
-    return true; 
-}
 
 bool Raytrace ( SRay ray, float start, float final, inout SIntersection intersect ) 
 { 
@@ -378,18 +400,24 @@ bool Raytrace ( SRay ray, float start, float final, inout SIntersection intersec
 	    } 
 	}
 
-	if( IntersectCube (cube, ray, test) && test < intersect.Time )  {       
-    		intersect.Time = test;    
-			intersect.Point = ray.Origin + ray.Direction * test;      
-			intersect.Normal = normalize (cube.bounds[0]);
-			SMaterial mat = Materials[6];
-			intersect.Color = mat.Color;        
+	for(int i = 0; i < 12; i++) 
+	{
+	    STriangle triangle = cube.bounds[i]; 
+	    if(IntersectTriangle(ray, triangle.v1, triangle.v2, triangle.v3, test) && test < intersect.Time)
+	    {        
+    	    intersect.Time = test;  
+			intersect.Point = ray.Origin + ray.Direction * test;  
+			intersect.Normal =               
+			normalize(cross(triangle.v1 - triangle.v2, triangle.v3 - triangle.v2));
+			SMaterial mat = Materials[7];
+			intersect.Color = cube_color;    
 			intersect.LightCoeffs = mat.LightCoeffs;
-			intersect.ReflectionCoef = mat.ReflectionCoef;   
+			intersect.ReflectionCoef = mat.ReflectionCoef;       
 			intersect.RefractionCoef = mat.RefractionCoef;       
-			intersect.MaterialType =   mat.MaterialType;  
-			result = true;    
-	} 
+			intersect.MaterialType = mat.MaterialType;       
+			result = true;   
+		} 
+	}
 	return result;
 } 
 
@@ -452,7 +480,7 @@ void main ( void )
     float start = 0;   
 	float final = 1000000.0;
 	
-	uCamera.Position = vec3(0.0, 0.0, -7.0);
+	uCamera.Position = camera_position;
     uCamera.View = vec3(0.0, 0.0, 1.0); 
 	uCamera.Up = vec3(0.0, 1.0, 0.0);  
 	uCamera.Side = vec3(1.0, 0.0, 0.0); 

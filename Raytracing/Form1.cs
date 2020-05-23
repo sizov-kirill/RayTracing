@@ -19,6 +19,9 @@ namespace OpenGL
         int BasicProgramID;
         int BasicVertexShader;
         int BasicFragmentShader;
+        OpenTK.Vector3 CubeColor;
+        OpenTK.Vector3 CameraPosition;
+        OpenTK.Vector3 CubeCoord2;
 
         public Form1()
         {
@@ -35,6 +38,11 @@ namespace OpenGL
             GL.CompileShader(address);
             GL.AttachShader(program, address);
             Console.WriteLine(GL.GetShaderInfoLog(address));
+        }
+
+        void SetUniformVec3(string name, OpenTK.Vector3 value)
+        {
+            GL.Uniform3(GL.GetUniformLocation(BasicProgramID, name), value);
         }
 
         void InitShaders()
@@ -70,6 +78,8 @@ namespace OpenGL
             GL.ClearColor(Color.AliceBlue);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.UseProgram(BasicProgramID);
+            SetUniformVec3("cube_color", CubeColor);
+            SetUniformVec3("camera_position", CameraPosition);
             // Quad
             GL.Color3(Color.White);
             GL.Begin(PrimitiveType.Quads);
@@ -102,6 +112,41 @@ namespace OpenGL
             InitShaders();
         }
 
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            CubeColor.X = trackBar1.Value / 255.0f;
+            openGlControl.Invalidate();
+        }
+
+        private void trackBar4_Scroll(object sender, EventArgs e)
+        {
+            CameraPosition.X = trackBar4.Value;
+            openGlControl.Invalidate();
+        }
+
+        private void trackBar5_Scroll(object sender, EventArgs e)
+        {
+            CameraPosition.Y = trackBar5.Value;
+            openGlControl.Invalidate();
+        }
+
+        private void trackBar6_Scroll(object sender, EventArgs e)
+        {
+            CameraPosition.Z = trackBar6.Value;
+            openGlControl.Invalidate();
+        }
+
+        private void trackBar2_Scroll_1(object sender, EventArgs e)
+        {
+            CubeColor.Y = trackBar2.Value / 255.0f;
+            openGlControl.Invalidate();
+        }
+
+        private void trackBar3_Scroll_1(object sender, EventArgs e)
+        {
+            CubeColor.Z = trackBar3.Value / 255.0f;
+            openGlControl.Invalidate();
+        }
 
     }
 }
